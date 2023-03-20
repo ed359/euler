@@ -21,15 +21,12 @@ newtype MultiSet a = MultiSet (M.Map a Int)
     deriving (Eq, Ord)
 
 instance Show a => Show (MultiSet a) where
-  showsPrec :: Int -> MultiSet a -> ShowS
   showsPrec p xs = showParen (p > 10) $ showString "fromList " . shows (toList xs)
 
 instance Foldable MultiSet where
-    foldr :: (a -> b -> b) -> b -> MultiSet a -> b
     foldr f z (MultiSet m) = M.foldrWithKey repF z m
         where repF x 1 acc = f x acc
               repF x n acc = repF x (n - 1) (f x acc)
-    foldl :: (b -> a -> b) -> b -> MultiSet a -> b
     foldl f z (MultiSet m) = M.foldlWithKey repF z m
         where repF acc x 1 = f acc x
               repF acc x n = repF (f acc x) x (n - 1)
