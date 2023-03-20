@@ -1,7 +1,7 @@
 module Main (main) where
 
-import qualified Problem076
+import qualified Problem097
 
 
 main :: IO ()
-main = Problem076.main
+main = Problem097.main
