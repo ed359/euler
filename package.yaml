@@ -22,10 +22,10 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - criterion
+- sorted-list
 - unordered-containers
 
 ghc-options:
-- -Wall
 - -Wcompat
 - -Widentities
 - -Wincomplete-record-updates

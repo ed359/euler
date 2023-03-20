@@ -1,7 +1,11 @@
 module Main (main) where
 
-import qualified Problem097
+import Problem077 (main)
+-- import Criterion.Main ( defaultMain, bench, bgroup, nf )
 
 
-main :: IO ()
-main = Problem097.main
+-- main = defaultMain [
+--   bgroup "Main" [ bench "bench1" $ nf primePartitions 40
+--                 , bench "bench2" $ nf naivePrimePartitions 40
+--                 ]
+--   ]
