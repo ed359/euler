@@ -1,7 +1,7 @@
 module Problem014 (main, solve) where
 
-import qualified Data.Map as M
-import Data.Foldable (foldl', maximumBy)
+import Data.Array (Array, Ix, array, inRange, range, (!))
+import Data.Foldable (maximumBy)
 import Data.Ord (comparing)
 
 next :: Integral a => a -> a
@@ -14,22 +14,27 @@ collatzSequence n = n : collatzSequence (next n)
 naiveCollatzLength :: Int -> Int
 naiveCollatzLength = length . collatzSequence
 
-collatzLength :: Int -> Int
-collatzLength 1 = 1
-collatzLength n 
-    | n' <= memBound = 1 + M.findWithDefault 0 n' memCollatzLength
-    | otherwise      = 1 + collatzLength n'
-    where n' = next n
+collatzLengthAbstract :: (Int -> Int) -> Int -> Int
+collatzLengthAbstract _ 1 = 1
+collatzLengthAbstract r n
+    | even n = 1 + r (n `div` 2)
+    | otherwise = 1 + r (3*n + 1)
 
-memBound :: Int
-memBound = 1000000
-memCollatzLength :: M.Map Int Int
-memCollatzLength = M.fromList [(n, collatzLength n) | n <- [1..memBound]]
-    
+buildMemo :: (Ix i) => (i, i) -> (i -> e) -> Array i e
+buildMemo bounds f = array bounds $ map (\x -> (x, f x)) $ range bounds
 
--- takes about 0.5s
+memoRange :: (Ix a) => (a, a) -> ((a -> b) -> a -> b) -> a -> b
+memoRange bounds abstractF = arrayLookup
+    where
+        memoArray = buildMemo bounds (abstractF arrayLookup)
+        arrayLookup x = if inRange bounds x then memoArray ! x else abstractF arrayLookup x
+
+collatzLengthMemo :: Int -> Int -> Int
+collatzLengthMemo n = memoRange (1, n) collatzLengthAbstract
+
+-- takes about 0.1s
 solve :: Int -> Int
-solve n = maximumBy (comparing collatzLength) [1..n-1]
+solve n = let f = collatzLengthMemo n in maximumBy (comparing f) [1..n-1]
 
 main :: IO ()
 main = print $ solve 1000000

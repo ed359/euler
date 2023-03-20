@@ -20,9 +20,9 @@ description:         Please see the README on GitHub at <https://github.com/ed35
 
 dependencies:
 - base >= 4.7 && < 5
+- array
 - containers
 - criterion
-- sorted-list
 - unordered-containers
 
 ghc-options:
