@@ -15,17 +15,19 @@ naiveCollatzLength :: Int -> Int
 naiveCollatzLength = length . collatzSequence
 
 collatzLength :: Int -> Int
-collatzLength n = fst $ memCollatzLength n M.empty
+collatzLength 1 = 1
+collatzLength n 
+    | n' <= memBound = 1 + M.findWithDefault 0 n' memCollatzLength
+    | otherwise      = 1 + collatzLength n'
+    where n' = next n
 
-memCollatzLength :: Int -> M.Map Int Int -> (Int, M.Map Int Int)
-memCollatzLength 1 m = (1, m)
-memCollatzLength n m = case M.lookup n m of 
-    Just l -> (l, m)
-    Nothing -> (nl + 1, M.insert n (nl+1) (M.union nm m))
-  where
-    (nl, nm) = memCollatzLength (next n) m
+memBound :: Int
+memBound = 1000000
+memCollatzLength :: M.Map Int Int
+memCollatzLength = M.fromList [(n, collatzLength n) | n <- [1..memBound]]
+    
 
--- takes about 10s
+-- takes about 0.5s
 solve :: Int -> Int
 solve n = maximumBy (comparing collatzLength) [1..n-1]
 
