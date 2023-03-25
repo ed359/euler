@@ -44,9 +44,19 @@ primeFactorsGroup n = map (\xs -> (head xs, length xs)) $ Data.List.group $ prim
 
 -- All the divisors of a number (including 1 and itself)
 divisors :: Integral a => a -> [a]
-divisors n = foldr (\(p, e) ds -> concatMap (\d -> [d * p ^ k | k <- [0 .. e]]) ds) [1] $ primeFactorsGroup n
+divisors n = product <$> mapM (\(p, e) -> [p^k | k <- [0..e]]) (primeFactorsGroup n)
 {-# SPECIALIZE divisors :: Int -> [Int] #-}
 {-# SPECIALIZE divisors :: Integer -> [Integer] #-}
+
+divisorsInOrder :: Integral a => a -> [a]
+divisorsInOrder n = foldr (\(p, e) ds -> concatMap (\d -> [d * p^k | k <- [0 .. e]]) ds) [1] $ primeFactorsGroup n
+{-# SPECIALIZE divisorsInOrder :: Int -> [Int] #-}
+{-# SPECIALIZE divisorsInOrder :: Integer -> [Integer] #-}
+
+divisorsInOrder' :: Integral a => a -> [a]
+divisorsInOrder' n = foldl' (\ds (p, e) -> concatMap (\d -> [d * p^k | k <- [0 .. e]]) ds) [1] $ primeFactorsGroup n
+{-# SPECIALIZE divisorsInOrder' :: Int -> [Int] #-}
+{-# SPECIALIZE divisorsInOrder' :: Integer -> [Integer] #-}
 
 -- Euler totient
 totient :: Integral a => a -> a
