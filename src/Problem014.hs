@@ -1,7 +1,6 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Problem014 (main, solve) where
 
@@ -218,6 +217,7 @@ mutableLookup applicativeF nil arr j = do
 -- For this version, we might have asked for the value for some j outside the memoization bounds, so before leaving
 -- the ST computation we write the desired value to the first index k in the array. This is kind of weird, no? A
 -- more pleasing solution would be to compute the desired value in an ST context that can manage its own array.
+-- RankNTypes is needed for the type signature as we have a "forall f" that cannot be hoisted to the front.
 memoizeRangeST :: (Ix i, Eq e) => (i, i) -> (forall f. Applicative f => (i -> f e) -> i -> f e) -> e -> i -> e
 memoizeRangeST memBounds applicativeF nil j = arr IA.! k
     where
@@ -229,11 +229,14 @@ memoizeRangeST memBounds applicativeF nil j = arr IA.! k
             return stArr
 
 -- For reasons I do not fully understand, some extra constraints are needed for the STUArray version
+-- RankNTypes is needed for the type signature as we have a "forall f" that cannot be hoisted to the front.
+-- FlexibleContexts is needed for the "IArray UArray e" constraint as UArray isn't a type variable
+-- QuantifiedConstraints is needed (in addition) for the constraint "forall s. MArray (STUArray s) e (ST s)" as there
+-- is a forall "quantifier" in there.
 memoizeRangeSTU :: forall i e. (Ix i, Eq e, IArray UArray e, forall s. MArray (STUArray s) e (ST s)) => (i, i) -> (forall f. Applicative f => (i -> f e) -> i -> f e) -> e -> i -> e
 memoizeRangeSTU memBounds applicativeF nil j = arr IA.! k
     where
         k = fst memBounds
-        arr :: UArray i e
         arr = runSTUArray $ do
             stArr <- MA.newArray memBounds nil
             x <- mutableLookup applicativeF nil stArr j
