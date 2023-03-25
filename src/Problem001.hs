@@ -12,9 +12,9 @@ sumArith a d n = n * (2 * a + (n - 1) * d) `div` 2
 
 solveGalaxy :: Int -> Int
 solveGalaxy n = go 3 + go 5 - go 15
-  where
-    go d = sumArith d d (nTerms d)
-    nTerms = div (n - 1)
+ where
+  go d = sumArith d d (nTerms d)
+  nTerms = div (n - 1)
 
 -- Wheel solution that avoinds most modding
 wheelLength :: Int
@@ -44,8 +44,8 @@ bmain =
   defaultMain
     [ bgroup
         "solve"
-        [ bench "basic" $ whnf solveBasic bn,
-          bench "wheel" $ whnf solveWheel bn,
-          bench "galaxy" $ whnf solveGalaxy bn
+        [ bench "basic" $ whnf solveBasic bn
+        , bench "wheel" $ whnf solveWheel bn
+        , bench "galaxy" $ whnf solveGalaxy bn
         ]
     ]

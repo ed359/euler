@@ -17,15 +17,23 @@ module Problem076 (main) where
 -- they involve lots of fancy mathematics functions.
 partition :: Int -> Int
 partition 0 = 1
-partition n = sum [(-1)^(k+1) * (partition (n-(k*(3*k+1) `div` 2)) + partition (n-(k*(3*k-1) `div` 2))) |
-                   k <- takeWhile (\l -> (6*l-1)^2 <= 24*n+1) [1..]]
+partition n =
+      sum
+            [ (-1) ^ (k + 1) * (partition (n - (k * (3 * k + 1) `div` 2)) + partition (n - (k * (3 * k - 1) `div` 2)))
+            | k <- takeWhile (\l -> (6 * l - 1) ^ 2 <= 24 * n + 1) [1 ..]
+            ]
 
 memoizedPartition :: Int -> Int
-memoizedPartition n | n < 0 = 0
-                    | otherwise = map p [0 ..] !! n
-   where p 0 = 1
-         p m = sum [(-1)^(k+1) * (memoizedPartition (m-(k*(3*k+1) `div` 2)) + memoizedPartition (m-(k*(3*k-1) `div` 2))) |
-                   k <- takeWhile (\l -> (6*l-1)^2 <= 24*m+1) [1..]]
+memoizedPartition n
+      | n < 0 = 0
+      | otherwise = map p [0 ..] !! n
+   where
+      p 0 = 1
+      p m =
+            sum
+                  [ (-1) ^ (k + 1) * (memoizedPartition (m - (k * (3 * k + 1) `div` 2)) + memoizedPartition (m - (k * (3 * k - 1) `div` 2)))
+                  | k <- takeWhile (\l -> (6 * l - 1) ^ 2 <= 24 * m + 1) [1 ..]
+                  ]
 
 main :: IO ()
 main = print $ memoizedPartition 100 - 1
