@@ -1,4 +1,21 @@
-module Primes (sieve, primes, primeFactors, primeFactorsGroup, totient, numDivisors, divisors, divisorsInOrder, divisorsInOrder') where
+module Primes (
+  sieve,
+  primes,
+  primeFactors,
+  groupFactors,
+  primeFactorsGroup,
+  combineFactorsGroup,
+  countDivisors',
+  numDivisors,
+  numDivisorsProduct,
+  divisorsFromFactorsGroup,
+  divisors,
+  divisorsProduct,
+  divisorsProductList,
+  divisorsInOrder,
+  divisorsInOrder',
+  totient,
+) where
 
 import Data.List (foldl', group)
 import Data.Map.Strict qualified as M
@@ -36,16 +53,40 @@ primeFactors n = go n primes
 {-# SPECIALIZE primeFactors :: Int -> [Int] #-}
 {-# SPECIALIZE primeFactors :: Integer -> [Integer] #-}
 
+groupFactors :: Integral a => [a] -> [(a, Int)]
+groupFactors = map (\xs -> if null xs then (1, 1) else (head xs, length xs)) . group
+{-# SPECIALIZE groupFactors :: [Int] -> [(Int, Int)] #-}
+{-# SPECIALIZE groupFactors :: [Integer] -> [(Integer, Int)] #-}
+
 -- List of (prime, exponent) pairs
 primeFactorsGroup :: Integral a => a -> [(a, Int)]
-primeFactorsGroup n = map (\xs -> (head xs, length xs)) $ Data.List.group $ primeFactors n
+primeFactorsGroup = groupFactors . primeFactors
 {-# SPECIALIZE primeFactorsGroup :: Int -> [(Int, Int)] #-}
 {-# SPECIALIZE primeFactorsGroup :: Integer -> [(Integer, Int)] #-}
 
+-- | Compute the grouped prime factors of a product m*n from the individual grouped prime factors
+combineFactorsGroup :: (Ord a, Num b) => [(a, b)] -> [(a, b)] -> [(a, b)]
+combineFactorsGroup [] ys = ys
+combineFactorsGroup xs [] = xs
+combineFactorsGroup xs@((p, e) : xss) ys@((q, f) : yss)
+  | p < q = (p, e) : combineFactorsGroup xss ys
+  | p > q = (q, f) : combineFactorsGroup xs yss
+  | p == q = (p, e + f) : combineFactorsGroup xss yss
+
+-- | Helper function for counting divisors
+countDivisors' :: [(a, Int)] -> Int
+countDivisors' = foldl' (\r (_, e) -> r * (e + 1)) 1
+
 numDivisors :: Integral a => a -> Int
-numDivisors n = foldl' (\a (p, e) -> a * (e + 1)) 1 $ primeFactorsGroup n
+numDivisors n = countDivisors' $ primeFactorsGroup n
 {-# SPECIALIZE numDivisors :: Int -> Int #-}
 {-# SPECIALIZE numDivisors :: Integer -> Int #-}
+
+-- | Optimized numDivisors in the case of a product m*n
+numDivisorsProduct :: Integral a => a -> a -> Int
+numDivisorsProduct m n = countDivisors' $ combineFactorsGroup (primeFactorsGroup m) (primeFactorsGroup n)
+{-# SPECIALIZE numDivisorsProduct :: Int -> Int -> Int #-}
+{-# SPECIALIZE numDivisorsProduct :: Integer -> Integer -> Int #-}
 
 -- All the divisors of a number (including 1 and itself)
 divisors :: Integral a => a -> [a]
@@ -58,10 +99,23 @@ divisorsInOrder n = foldr (\(p, e) ds -> concatMap (\d -> [d * p ^ k | k <- [0 .
 {-# SPECIALIZE divisorsInOrder :: Int -> [Int] #-}
 {-# SPECIALIZE divisorsInOrder :: Integer -> [Integer] #-}
 
+divisorsFromFactorsGroup :: (Foldable t, Num a) => t (a, Int) -> [a]
+divisorsFromFactorsGroup = foldl' (\ds (p, e) -> concatMap (\d -> [d * p ^ k | k <- [0 .. e]]) ds) [1]
+
 divisorsInOrder' :: Integral a => a -> [a]
-divisorsInOrder' n = foldl' (\ds (p, e) -> concatMap (\d -> [d * p ^ k | k <- [0 .. e]]) ds) [1] $ primeFactorsGroup n
+divisorsInOrder' n = divisorsFromFactorsGroup $ primeFactorsGroup n
 {-# SPECIALIZE divisorsInOrder' :: Int -> [Int] #-}
 {-# SPECIALIZE divisorsInOrder' :: Integer -> [Integer] #-}
+
+divisorsProduct :: Integral a => a -> a -> [a]
+divisorsProduct m n = divisorsFromFactorsGroup $ combineFactorsGroup (primeFactorsGroup m) (primeFactorsGroup n)
+{-# SPECIALIZE divisorsProduct :: Int -> Int -> [Int] #-}
+{-# SPECIALIZE divisorsProduct :: Integer -> Integer -> [Integer] #-}
+
+divisorsProductList :: Integral a => [a] -> [a]
+divisorsProductList ns = divisorsFromFactorsGroup $ foldl' combineFactorsGroup [] $ map primeFactorsGroup ns
+{-# SPECIALIZE divisorsProductList :: [Int] -> [Int] #-}
+{-# SPECIALIZE divisorsProductList :: [Integer] -> [Integer] #-}
 
 -- Euler totient
 totient :: Integral a => a -> a
