@@ -1,4 +1,4 @@
-module Primes (primes, sieve, primeFactors, primeFactorsGroup, divisors, totient) where
+module Primes (sieve, primes, primeFactors, primeFactorsGroup, totient, numDivisors, divisors, divisorsInOrder, divisorsInOrder') where
 
 import Data.List (foldl', group)
 import Data.Map.Strict qualified as M
@@ -41,6 +41,11 @@ primeFactorsGroup :: Integral a => a -> [(a, Int)]
 primeFactorsGroup n = map (\xs -> (head xs, length xs)) $ Data.List.group $ primeFactors n
 {-# SPECIALIZE primeFactorsGroup :: Int -> [(Int, Int)] #-}
 {-# SPECIALIZE primeFactorsGroup :: Integer -> [(Integer, Int)] #-}
+
+numDivisors :: Integral a => a -> Int
+numDivisors n = foldl' (\a (p, e) -> a * (e + 1)) 1 $ primeFactorsGroup n
+{-# SPECIALIZE numDivisors :: Int -> Int #-}
+{-# SPECIALIZE numDivisors :: Integer -> Int #-}
 
 -- All the divisors of a number (including 1 and itself)
 divisors :: Integral a => a -> [a]
